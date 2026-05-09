@@ -14,7 +14,125 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      matches: {
+        Row: {
+          created_at: string
+          id: string
+          user1_id: string
+          user2_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          user1_id: string
+          user2_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          user1_id?: string
+          user2_id?: string
+        }
+        Relationships: []
+      }
+      messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          match_id: string
+          sender_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          match_id: string
+          sender_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          match_id?: string
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "matches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          age: number | null
+          bio: string
+          created_at: string
+          display_name: string
+          gender: Database["public"]["Enums"]["gender"] | null
+          id: string
+          interested_in: Database["public"]["Enums"]["gender"] | null
+          location: string | null
+          onboarded: boolean
+          photo_url: string | null
+          updated_at: string
+        }
+        Insert: {
+          age?: number | null
+          bio?: string
+          created_at?: string
+          display_name?: string
+          gender?: Database["public"]["Enums"]["gender"] | null
+          id: string
+          interested_in?: Database["public"]["Enums"]["gender"] | null
+          location?: string | null
+          onboarded?: boolean
+          photo_url?: string | null
+          updated_at?: string
+        }
+        Update: {
+          age?: number | null
+          bio?: string
+          created_at?: string
+          display_name?: string
+          gender?: Database["public"]["Enums"]["gender"] | null
+          id?: string
+          interested_in?: Database["public"]["Enums"]["gender"] | null
+          location?: string | null
+          onboarded?: boolean
+          photo_url?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      swipes: {
+        Row: {
+          created_at: string
+          id: string
+          liked: boolean
+          swiped_id: string
+          swiper_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          liked: boolean
+          swiped_id: string
+          swiper_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          liked?: boolean
+          swiped_id?: string
+          swiper_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +141,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      gender: "male" | "female" | "nonbinary" | "other"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +268,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      gender: ["male", "female", "nonbinary", "other"],
+    },
   },
 } as const
