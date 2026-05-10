@@ -75,19 +75,26 @@ function Discover() {
 
   useEffect(() => { load(); /* eslint-disable-next-line */ }, [user]);
 
+  const swipesLeft = Math.max(0, FREE_DAILY_SWIPES - swipesToday);
+  const blocked = !isVip && swipesLeft === 0;
+
   const swipe = async (liked: boolean) => {
     if (!user || stack.length === 0 || animating) return;
+    if (blocked) {
+      toast.error("Daily swipe limit reached. Upgrade to VIP for unlimited swipes.");
+      return;
+    }
     const target = stack[0];
     setAnimating(liked ? "like" : "pass");
     setTimeout(async () => {
       setStack((s) => s.slice(1));
       setAnimating(null);
+      setSwipesToday((n) => n + 1);
       const { error } = await supabase.from("swipes").insert({
         swiper_id: user.id, swiped_id: target.id, liked,
       });
       if (error) return toast.error(error.message);
       if (liked) {
-        // Check for match
         const { data: m } = await supabase
           .from("matches").select("id")
           .or(`and(user1_id.eq.${user.id},user2_id.eq.${target.id}),and(user1_id.eq.${target.id},user2_id.eq.${user.id})`)
