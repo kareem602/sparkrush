@@ -32,13 +32,25 @@ function Matches() {
       if (otherIds.length === 0) { setRows([]); setLoading(false); return; }
       const { data: profiles } = await supabase
         .from("profiles").select("id, display_name, photo_url").in("id", otherIds);
+      const { data: subs } = await supabase
+        .from("subscriptions").select("user_id, status, plan, current_period_end").in("user_id", otherIds);
+      const vipIds = new Set(
+        (subs ?? [])
+          .filter((s) => s.status === "active" && s.plan !== "free" && (!s.current_period_end || new Date(s.current_period_end) > new Date()))
+          .map((s) => s.user_id)
+      );
       const byId = new Map(profiles?.map((p) => [p.id, p]) ?? []);
       setRows((matches ?? []).map((m) => {
         const otherId = m.user1_id === user.id ? m.user2_id : m.user1_id;
         const p = byId.get(otherId);
         return {
           matchId: m.id,
-          other: { id: otherId, display_name: p?.display_name ?? "Someone", photo_url: p?.photo_url ?? null },
+          other: {
+            id: otherId,
+            display_name: p?.display_name ?? "Someone",
+            photo_url: p?.photo_url ?? null,
+            is_vip: vipIds.has(otherId),
+          },
         };
       }));
       setLoading(false);
