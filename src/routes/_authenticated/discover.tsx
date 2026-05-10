@@ -1,9 +1,11 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Heart, X, MapPin, Sparkles } from "lucide-react";
+import { Heart, X, MapPin, Sparkles, Rocket } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { useVip } from "@/hooks/use-vip";
+import { VipBadge } from "@/components/vip-badge";
 
 export const Route = createFileRoute("/_authenticated/discover")({
   component: Discover,
@@ -16,6 +18,8 @@ type Profile = {
   bio: string;
   photo_url: string | null;
   location: string | null;
+  boost_until: string | null;
+  is_vip?: boolean;
 };
 
 function Discover() {
