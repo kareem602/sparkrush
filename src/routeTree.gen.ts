@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
@@ -20,6 +21,11 @@ import { Route as AuthenticatedDiscoverRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedChatMatchIdRouteImport } from './routes/_authenticated/chat.$matchId'
 
+const PricingRoute = PricingRouteImport.update({
+  id: '/pricing',
+  path: '/pricing',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
@@ -74,6 +80,7 @@ const AuthenticatedChatMatchIdRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/pricing': typeof PricingRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/discover': typeof AuthenticatedDiscoverRoute
   '/likes-you': typeof AuthenticatedLikesYouRoute
@@ -85,6 +92,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/pricing': typeof PricingRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/discover': typeof AuthenticatedDiscoverRoute
   '/likes-you': typeof AuthenticatedLikesYouRoute
@@ -98,6 +106,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/auth': typeof AuthRoute
+  '/pricing': typeof PricingRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/discover': typeof AuthenticatedDiscoverRoute
   '/_authenticated/likes-you': typeof AuthenticatedLikesYouRoute
@@ -111,6 +120,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/pricing'
     | '/admin'
     | '/discover'
     | '/likes-you'
@@ -122,6 +132,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/pricing'
     | '/admin'
     | '/discover'
     | '/likes-you'
@@ -134,6 +145,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/pricing'
     | '/_authenticated/admin'
     | '/_authenticated/discover'
     | '/_authenticated/likes-you'
@@ -147,10 +159,18 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   AuthRoute: typeof AuthRoute
+  PricingRoute: typeof PricingRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/pricing': {
+      id: '/pricing'
+      path: '/pricing'
+      fullPath: '/pricing'
+      preLoaderRoute: typeof PricingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth': {
       id: '/auth'
       path: '/auth'
@@ -252,6 +272,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   AuthRoute: AuthRoute,
+  PricingRoute: PricingRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
