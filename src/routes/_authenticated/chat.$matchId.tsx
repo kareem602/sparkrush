@@ -24,12 +24,16 @@ type Message = {
 function Chat() {
   const { matchId } = Route.useParams();
   const { user } = useAuth();
+  const { isVip } = useVip();
   const navigate = useNavigate();
   const [messages, setMessages] = useState<Message[]>([]);
-  const [other, setOther] = useState<{ display_name: string; photo_url: string | null } | null>(null);
+  const [other, setOther] = useState<{ id: string; display_name: string; photo_url: string | null } | null>(null);
+  const [otherIsVip, setOtherIsVip] = useState(false);
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
+  const [sentToday, setSentToday] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const FREE_DAILY_LIMIT = 5;
 
   useEffect(() => {
     if (!user) return;
