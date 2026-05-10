@@ -126,6 +126,12 @@ function Discover() {
 
   return (
     <div className="flex-1 flex flex-col items-center justify-between px-4 py-4 sm:py-8 bg-gradient-soft">
+      {!isVip && (
+        <div className="w-full max-w-sm mb-3 flex items-center justify-between rounded-full bg-card border border-border px-4 py-1.5 text-xs">
+          <span className="text-muted-foreground">{swipesLeft} of {FREE_DAILY_SWIPES} swipes left</span>
+          <Link to="/pricing" className="font-semibold text-primary">Go unlimited</Link>
+        </div>
+      )}
       <div className="relative w-full max-w-sm aspect-[3/4]">
         {next && <Card profile={next} className="absolute inset-0 scale-95 opacity-60" />}
         <Card
@@ -139,15 +145,17 @@ function Discover() {
       <div className="flex items-center gap-6 mt-6">
         <button
           onClick={() => swipe(false)}
+          disabled={blocked}
           aria-label="Pass"
-          className="h-16 w-16 rounded-full bg-card shadow-card border border-border flex items-center justify-center text-muted-foreground hover:text-destructive hover:scale-105 transition"
+          className="h-16 w-16 rounded-full bg-card shadow-card border border-border flex items-center justify-center text-muted-foreground hover:text-destructive hover:scale-105 transition disabled:opacity-50"
         >
           <X className="h-7 w-7" strokeWidth={2.5} />
         </button>
         <button
           onClick={() => swipe(true)}
+          disabled={blocked}
           aria-label="Like"
-          className="h-20 w-20 rounded-full bg-gradient-primary shadow-glow flex items-center justify-center text-primary-foreground hover:scale-105 transition"
+          className="h-20 w-20 rounded-full bg-gradient-primary shadow-glow flex items-center justify-center text-primary-foreground hover:scale-105 transition disabled:opacity-50"
         >
           <Heart className="h-9 w-9 fill-current" />
         </button>
@@ -157,6 +165,7 @@ function Discover() {
 }
 
 function Card({ profile, className = "" }: { profile: Profile; className?: string }) {
+  const boosted = profile.boost_until && new Date(profile.boost_until) > new Date();
   return (
     <div className={`rounded-3xl overflow-hidden bg-card shadow-card border border-border ${className}`}>
       <div className="relative h-full w-full">
@@ -167,6 +176,14 @@ function Card({ profile, className = "" }: { profile: Profile; className?: strin
             {profile.display_name.charAt(0).toUpperCase()}
           </div>
         )}
+        <div className="absolute top-3 left-3 right-3 flex items-start justify-between gap-2">
+          {boosted && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-primary text-primary-foreground px-2 py-1 text-xs font-semibold shadow-md">
+              <Rocket className="h-3 w-3" /> Boosted
+            </span>
+          )}
+          {profile.is_vip && <div className="ml-auto"><VipBadge size="sm" /></div>}
+        </div>
         <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent p-5 text-white">
           <div className="flex items-end justify-between">
             <h2 className="text-2xl font-bold">
