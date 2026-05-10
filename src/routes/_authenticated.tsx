@@ -1,6 +1,6 @@
 import { createFileRoute, Outlet, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Heart, Compass, MessageCircle, User as UserIcon, LogOut } from "lucide-react";
+import { Heart, Compass, MessageCircle, User as UserIcon, LogOut, Shield } from "lucide-react";
 import { Link, useLocation } from "@tanstack/react-router";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,6 +14,7 @@ function AuthGate() {
   const navigate = useNavigate();
   const location = useLocation();
   const [onboarded, setOnboarded] = useState<boolean | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) navigate({ to: "/auth" });
@@ -23,6 +24,9 @@ function AuthGate() {
     if (!user) return;
     supabase.from("profiles").select("onboarded").eq("id", user.id).maybeSingle().then(({ data }) => {
       setOnboarded(!!data?.onboarded);
+    });
+    supabase.from("user_roles").select("role").eq("user_id", user.id).eq("role", "admin").maybeSingle().then(({ data }) => {
+      setIsAdmin(!!data);
     });
   }, [user]);
 
@@ -61,11 +65,12 @@ function AuthGate() {
 
       {!isOnboarding && !isChat && (
         <nav className="sticky bottom-0 z-20 bg-background/90 backdrop-blur border-t border-border">
-          <div className="mx-auto max-w-2xl grid grid-cols-3">
+          <div className={`mx-auto max-w-2xl grid ${isAdmin ? "grid-cols-4" : "grid-cols-3"}`}>
             {[
               { to: "/discover", icon: Compass, label: "Discover" },
               { to: "/matches", icon: MessageCircle, label: "Matches" },
               { to: "/profile", icon: UserIcon, label: "Profile" },
+              ...(isAdmin ? [{ to: "/admin" as const, icon: Shield, label: "Admin" }] : []),
             ].map((t) => {
               const active = location.pathname.startsWith(t.to);
               return (
