@@ -43,12 +43,28 @@ function Chat() {
       if (error || !m) { toast.error("Match not found"); return navigate({ to: "/matches" }); }
       const otherId = m.user1_id === user.id ? m.user2_id : m.user1_id;
       const { data: p } = await supabase
-        .from("profiles").select("display_name, photo_url").eq("id", otherId).maybeSingle();
-      setOther(p ?? { display_name: "Someone", photo_url: null });
+        .from("profiles").select("id, display_name, photo_url").eq("id", otherId).maybeSingle();
+      setOther(p ?? { id: otherId, display_name: "Someone", photo_url: null });
+
+      const { data: vipRow } = await supabase
+        .from("subscriptions").select("status, plan, current_period_end").eq("user_id", otherId).maybeSingle();
+      setOtherIsVip(
+        !!vipRow && vipRow.status === "active" && vipRow.plan !== "free" &&
+        (!vipRow.current_period_end || new Date(vipRow.current_period_end) > new Date())
+      );
 
       const { data: msgs } = await supabase
         .from("messages").select("*").eq("match_id", matchId).order("created_at");
       setMessages(msgs ?? []);
+
+      const startOfDay = new Date(); startOfDay.setHours(0, 0, 0, 0);
+      const { count } = await supabase
+        .from("messages").select("*", { count: "exact", head: true })
+        .eq("sender_id", user.id).gte("created_at", startOfDay.toISOString());
+      setSentToday(count ?? 0);
+
+      await supabase.from("messages").update({ read_at: new Date().toISOString() })
+        .eq("match_id", matchId).neq("sender_id", user.id).is("read_at", null);
     })();
   }, [user, matchId, navigate]);
 
@@ -59,12 +75,19 @@ function Chat() {
       .on("postgres_changes", {
         event: "INSERT", schema: "public", table: "messages",
         filter: `match_id=eq.${matchId}`,
+      }, async (payload) => {
+        const m = payload.new as Message;
+        setMessages((curr) => curr.some((x) => x.id === m.id) ? curr : [...curr, m]);
+        if (m.sender_id !== user.id) {
+          await supabase.from("messages").update({ read_at: new Date().toISOString() }).eq("id", m.id);
+        }
+      })
+      .on("postgres_changes", {
+        event: "UPDATE", schema: "public", table: "messages",
+        filter: `match_id=eq.${matchId}`,
       }, (payload) => {
-        setMessages((curr) => {
-          const m = payload.new as Message;
-          if (curr.some((x) => x.id === m.id)) return curr;
-          return [...curr, m];
-        });
+        const m = payload.new as Message;
+        setMessages((curr) => curr.map((x) => x.id === m.id ? m : x));
       })
       .subscribe();
     return () => { supabase.removeChannel(channel); };
