@@ -41,6 +41,7 @@ export type Database = {
           created_at: string
           id: string
           match_id: string
+          read_at: string | null
           sender_id: string
         }
         Insert: {
@@ -48,6 +49,7 @@ export type Database = {
           created_at?: string
           id?: string
           match_id: string
+          read_at?: string | null
           sender_id: string
         }
         Update: {
@@ -55,6 +57,7 @@ export type Database = {
           created_at?: string
           id?: string
           match_id?: string
+          read_at?: string | null
           sender_id?: string
         }
         Relationships: [
@@ -110,6 +113,7 @@ export type Database = {
         Row: {
           age: number | null
           bio: string
+          boost_until: string | null
           created_at: string
           display_name: string
           gender: Database["public"]["Enums"]["gender"] | null
@@ -123,6 +127,7 @@ export type Database = {
         Insert: {
           age?: number | null
           bio?: string
+          boost_until?: string | null
           created_at?: string
           display_name?: string
           gender?: Database["public"]["Enums"]["gender"] | null
@@ -136,6 +141,7 @@ export type Database = {
         Update: {
           age?: number | null
           bio?: string
+          boost_until?: string | null
           created_at?: string
           display_name?: string
           gender?: Database["public"]["Enums"]["gender"] | null
@@ -238,6 +244,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_vip: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
