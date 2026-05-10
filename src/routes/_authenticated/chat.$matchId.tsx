@@ -1,10 +1,12 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { ArrowLeft, Send } from "lucide-react";
+import { ArrowLeft, Send, Check, CheckCheck } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { useVip } from "@/hooks/use-vip";
 import { Input } from "@/components/ui/input";
+import { VipBadge } from "@/components/vip-badge";
 
 export const Route = createFileRoute("/_authenticated/chat/$matchId")({
   component: Chat,
@@ -16,6 +18,7 @@ type Message = {
   sender_id: string;
   content: string;
   created_at: string;
+  read_at: string | null;
 };
 
 function Chat() {
