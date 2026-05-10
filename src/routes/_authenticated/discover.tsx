@@ -24,23 +24,52 @@ type Profile = {
 
 function Discover() {
   const { user } = useAuth();
+  const { isVip } = useVip();
   const [stack, setStack] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
   const [animating, setAnimating] = useState<"like" | "pass" | null>(null);
+  const [swipesToday, setSwipesToday] = useState(0);
+  const FREE_DAILY_SWIPES = 20;
 
   const load = async () => {
     if (!user) return;
     setLoading(true);
-    const { data: swiped } = await supabase.from("swipes").select("swiped_id").eq("swiper_id", user.id);
+    const { data: swiped } = await supabase.from("swipes").select("swiped_id, created_at").eq("swiper_id", user.id);
     const excludeIds = [user.id, ...(swiped?.map((s) => s.swiped_id) ?? [])];
+    const startOfDay = new Date(); startOfDay.setHours(0, 0, 0, 0);
+    setSwipesToday((swiped ?? []).filter((s) => new Date(s.created_at) >= startOfDay).length);
+
     const { data, error } = await supabase
       .from("profiles")
-      .select("id, display_name, age, bio, photo_url, location")
+      .select("id, display_name, age, bio, photo_url, location, boost_until")
       .eq("onboarded", true)
       .not("id", "in", `(${excludeIds.join(",")})`)
-      .limit(20);
+      .limit(30);
     if (error) toast.error(error.message);
-    setStack(data ?? []);
+    const profs = (data ?? []) as Profile[];
+
+    // Annotate VIP and sort: boosted first, then VIP, then random
+    const ids = profs.map((p) => p.id);
+    let vipIds = new Set<string>();
+    if (ids.length > 0) {
+      const { data: subs } = await supabase
+        .from("subscriptions").select("user_id, status, plan, current_period_end").in("user_id", ids);
+      vipIds = new Set(
+        (subs ?? [])
+          .filter((s) => s.status === "active" && s.plan !== "free" && (!s.current_period_end || new Date(s.current_period_end) > new Date()))
+          .map((s) => s.user_id)
+      );
+    }
+    const now = Date.now();
+    const annotated = profs.map((p) => ({ ...p, is_vip: vipIds.has(p.id) }));
+    annotated.sort((a, b) => {
+      const aBoost = a.boost_until && new Date(a.boost_until).getTime() > now ? 2 : 0;
+      const bBoost = b.boost_until && new Date(b.boost_until).getTime() > now ? 2 : 0;
+      const aScore = aBoost + (a.is_vip ? 1 : 0);
+      const bScore = bBoost + (b.is_vip ? 1 : 0);
+      return bScore - aScore;
+    });
+    setStack(annotated);
     setLoading(false);
   };
 
