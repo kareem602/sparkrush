@@ -14,6 +14,7 @@ function AuthGate() {
   const navigate = useNavigate();
   const location = useLocation();
   const [onboarded, setOnboarded] = useState<boolean | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) navigate({ to: "/auth" });
@@ -23,6 +24,9 @@ function AuthGate() {
     if (!user) return;
     supabase.from("profiles").select("onboarded").eq("id", user.id).maybeSingle().then(({ data }) => {
       setOnboarded(!!data?.onboarded);
+    });
+    supabase.from("user_roles").select("role").eq("user_id", user.id).eq("role", "admin").maybeSingle().then(({ data }) => {
+      setIsAdmin(!!data);
     });
   }, [user]);
 
