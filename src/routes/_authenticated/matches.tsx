@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { MessageCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { VipBadge } from "@/components/vip-badge";
 
 export const Route = createFileRoute("/_authenticated/matches")({
   component: Matches,
@@ -10,7 +11,7 @@ export const Route = createFileRoute("/_authenticated/matches")({
 
 type Row = {
   matchId: string;
-  other: { id: string; display_name: string; photo_url: string | null };
+  other: { id: string; display_name: string; photo_url: string | null; is_vip: boolean };
 };
 
 function Matches() {
