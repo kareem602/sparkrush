@@ -65,9 +65,10 @@ function AuthGate() {
 
       {!isOnboarding && !isChat && (
         <nav className="sticky bottom-0 z-20 bg-background/90 backdrop-blur border-t border-border">
-          <div className={`mx-auto max-w-2xl grid ${isAdmin ? "grid-cols-4" : "grid-cols-3"}`}>
+          <div className={`mx-auto max-w-2xl grid ${isAdmin ? "grid-cols-5" : "grid-cols-4"}`}>
             {[
               { to: "/discover", icon: Compass, label: "Discover" },
+              { to: "/likes-you" as const, icon: Star, label: "Likes" },
               { to: "/matches", icon: MessageCircle, label: "Matches" },
               { to: "/profile", icon: UserIcon, label: "Profile" },
               ...(isAdmin ? [{ to: "/admin" as const, icon: Shield, label: "Admin" }] : []),
