@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { MessageCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { VipBadge } from "@/components/vip-badge";
 
 export const Route = createFileRoute("/_authenticated/matches")({
   component: Matches,
@@ -10,7 +11,7 @@ export const Route = createFileRoute("/_authenticated/matches")({
 
 type Row = {
   matchId: string;
-  other: { id: string; display_name: string; photo_url: string | null };
+  other: { id: string; display_name: string; photo_url: string | null; is_vip: boolean };
 };
 
 function Matches() {
@@ -31,13 +32,25 @@ function Matches() {
       if (otherIds.length === 0) { setRows([]); setLoading(false); return; }
       const { data: profiles } = await supabase
         .from("profiles").select("id, display_name, photo_url").in("id", otherIds);
+      const { data: subs } = await supabase
+        .from("subscriptions").select("user_id, status, plan, current_period_end").in("user_id", otherIds);
+      const vipIds = new Set(
+        (subs ?? [])
+          .filter((s) => s.status === "active" && s.plan !== "free" && (!s.current_period_end || new Date(s.current_period_end) > new Date()))
+          .map((s) => s.user_id)
+      );
       const byId = new Map(profiles?.map((p) => [p.id, p]) ?? []);
       setRows((matches ?? []).map((m) => {
         const otherId = m.user1_id === user.id ? m.user2_id : m.user1_id;
         const p = byId.get(otherId);
         return {
           matchId: m.id,
-          other: { id: otherId, display_name: p?.display_name ?? "Someone", photo_url: p?.photo_url ?? null },
+          other: {
+            id: otherId,
+            display_name: p?.display_name ?? "Someone",
+            photo_url: p?.photo_url ?? null,
+            is_vip: vipIds.has(otherId),
+          },
         };
       }));
       setLoading(false);
@@ -68,8 +81,11 @@ function Matches() {
                 className="flex items-center gap-4 p-3 rounded-2xl bg-card border border-border hover:bg-accent transition shadow-soft"
               >
                 <Avatar name={r.other.display_name} url={r.other.photo_url} />
-                <div className="flex-1">
-                  <p className="font-semibold">{r.other.display_name}</p>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold flex items-center gap-1.5 truncate">
+                    {r.other.display_name}
+                    {r.other.is_vip && <VipBadge size="sm" />}
+                  </p>
                   <p className="text-xs text-muted-foreground">Tap to chat</p>
                 </div>
               </Link>

@@ -9,16 +9,23 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedMatchesRouteImport } from './routes/_authenticated/matches'
+import { Route as AuthenticatedLikesYouRouteImport } from './routes/_authenticated/likes-you'
 import { Route as AuthenticatedDiscoverRouteImport } from './routes/_authenticated/discover'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedChatMatchIdRouteImport } from './routes/_authenticated/chat.$matchId'
 
+const PricingRoute = PricingRouteImport.update({
+  id: '/pricing',
+  path: '/pricing',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
@@ -48,6 +55,11 @@ const AuthenticatedMatchesRoute = AuthenticatedMatchesRouteImport.update({
   path: '/matches',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedLikesYouRoute = AuthenticatedLikesYouRouteImport.update({
+  id: '/likes-you',
+  path: '/likes-you',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedDiscoverRoute = AuthenticatedDiscoverRouteImport.update({
   id: '/discover',
   path: '/discover',
@@ -68,8 +80,10 @@ const AuthenticatedChatMatchIdRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/pricing': typeof PricingRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/discover': typeof AuthenticatedDiscoverRoute
+  '/likes-you': typeof AuthenticatedLikesYouRoute
   '/matches': typeof AuthenticatedMatchesRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/profile': typeof AuthenticatedProfileRoute
@@ -78,8 +92,10 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/pricing': typeof PricingRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/discover': typeof AuthenticatedDiscoverRoute
+  '/likes-you': typeof AuthenticatedLikesYouRoute
   '/matches': typeof AuthenticatedMatchesRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/profile': typeof AuthenticatedProfileRoute
@@ -90,8 +106,10 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/auth': typeof AuthRoute
+  '/pricing': typeof PricingRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/discover': typeof AuthenticatedDiscoverRoute
+  '/_authenticated/likes-you': typeof AuthenticatedLikesYouRoute
   '/_authenticated/matches': typeof AuthenticatedMatchesRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
@@ -102,8 +120,10 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/pricing'
     | '/admin'
     | '/discover'
+    | '/likes-you'
     | '/matches'
     | '/onboarding'
     | '/profile'
@@ -112,8 +132,10 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/pricing'
     | '/admin'
     | '/discover'
+    | '/likes-you'
     | '/matches'
     | '/onboarding'
     | '/profile'
@@ -123,8 +145,10 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/pricing'
     | '/_authenticated/admin'
     | '/_authenticated/discover'
+    | '/_authenticated/likes-you'
     | '/_authenticated/matches'
     | '/_authenticated/onboarding'
     | '/_authenticated/profile'
@@ -135,10 +159,18 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   AuthRoute: typeof AuthRoute
+  PricingRoute: typeof PricingRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/pricing': {
+      id: '/pricing'
+      path: '/pricing'
+      fullPath: '/pricing'
+      preLoaderRoute: typeof PricingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth': {
       id: '/auth'
       path: '/auth'
@@ -181,6 +213,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMatchesRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/likes-you': {
+      id: '/_authenticated/likes-you'
+      path: '/likes-you'
+      fullPath: '/likes-you'
+      preLoaderRoute: typeof AuthenticatedLikesYouRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/discover': {
       id: '/_authenticated/discover'
       path: '/discover'
@@ -208,6 +247,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
   AuthenticatedDiscoverRoute: typeof AuthenticatedDiscoverRoute
+  AuthenticatedLikesYouRoute: typeof AuthenticatedLikesYouRoute
   AuthenticatedMatchesRoute: typeof AuthenticatedMatchesRoute
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
@@ -217,6 +257,7 @@ interface AuthenticatedRouteChildren {
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRoute,
   AuthenticatedDiscoverRoute: AuthenticatedDiscoverRoute,
+  AuthenticatedLikesYouRoute: AuthenticatedLikesYouRoute,
   AuthenticatedMatchesRoute: AuthenticatedMatchesRoute,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
@@ -231,6 +272,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   AuthRoute: AuthRoute,
+  PricingRoute: PricingRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

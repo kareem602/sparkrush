@@ -1,9 +1,11 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Heart, X, MapPin, Sparkles } from "lucide-react";
+import { Heart, X, MapPin, Sparkles, Rocket } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { useVip } from "@/hooks/use-vip";
+import { VipBadge } from "@/components/vip-badge";
 
 export const Route = createFileRoute("/_authenticated/discover")({
   component: Discover,
@@ -16,45 +18,83 @@ type Profile = {
   bio: string;
   photo_url: string | null;
   location: string | null;
+  boost_until: string | null;
+  is_vip?: boolean;
 };
 
 function Discover() {
   const { user } = useAuth();
+  const { isVip } = useVip();
   const [stack, setStack] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
   const [animating, setAnimating] = useState<"like" | "pass" | null>(null);
+  const [swipesToday, setSwipesToday] = useState(0);
+  const FREE_DAILY_SWIPES = 20;
 
   const load = async () => {
     if (!user) return;
     setLoading(true);
-    const { data: swiped } = await supabase.from("swipes").select("swiped_id").eq("swiper_id", user.id);
+    const { data: swiped } = await supabase.from("swipes").select("swiped_id, created_at").eq("swiper_id", user.id);
     const excludeIds = [user.id, ...(swiped?.map((s) => s.swiped_id) ?? [])];
+    const startOfDay = new Date(); startOfDay.setHours(0, 0, 0, 0);
+    setSwipesToday((swiped ?? []).filter((s) => new Date(s.created_at) >= startOfDay).length);
+
     const { data, error } = await supabase
       .from("profiles")
-      .select("id, display_name, age, bio, photo_url, location")
+      .select("id, display_name, age, bio, photo_url, location, boost_until")
       .eq("onboarded", true)
       .not("id", "in", `(${excludeIds.join(",")})`)
-      .limit(20);
+      .limit(30);
     if (error) toast.error(error.message);
-    setStack(data ?? []);
+    const profs = (data ?? []) as Profile[];
+
+    // Annotate VIP and sort: boosted first, then VIP, then random
+    const ids = profs.map((p) => p.id);
+    let vipIds = new Set<string>();
+    if (ids.length > 0) {
+      const { data: subs } = await supabase
+        .from("subscriptions").select("user_id, status, plan, current_period_end").in("user_id", ids);
+      vipIds = new Set(
+        (subs ?? [])
+          .filter((s) => s.status === "active" && s.plan !== "free" && (!s.current_period_end || new Date(s.current_period_end) > new Date()))
+          .map((s) => s.user_id)
+      );
+    }
+    const now = Date.now();
+    const annotated = profs.map((p) => ({ ...p, is_vip: vipIds.has(p.id) }));
+    annotated.sort((a, b) => {
+      const aBoost = a.boost_until && new Date(a.boost_until).getTime() > now ? 2 : 0;
+      const bBoost = b.boost_until && new Date(b.boost_until).getTime() > now ? 2 : 0;
+      const aScore = aBoost + (a.is_vip ? 1 : 0);
+      const bScore = bBoost + (b.is_vip ? 1 : 0);
+      return bScore - aScore;
+    });
+    setStack(annotated);
     setLoading(false);
   };
 
   useEffect(() => { load(); /* eslint-disable-next-line */ }, [user]);
 
+  const swipesLeft = Math.max(0, FREE_DAILY_SWIPES - swipesToday);
+  const blocked = !isVip && swipesLeft === 0;
+
   const swipe = async (liked: boolean) => {
     if (!user || stack.length === 0 || animating) return;
+    if (blocked) {
+      toast.error("Daily swipe limit reached. Upgrade to VIP for unlimited swipes.");
+      return;
+    }
     const target = stack[0];
     setAnimating(liked ? "like" : "pass");
     setTimeout(async () => {
       setStack((s) => s.slice(1));
       setAnimating(null);
+      setSwipesToday((n) => n + 1);
       const { error } = await supabase.from("swipes").insert({
         swiper_id: user.id, swiped_id: target.id, liked,
       });
       if (error) return toast.error(error.message);
       if (liked) {
-        // Check for match
         const { data: m } = await supabase
           .from("matches").select("id")
           .or(`and(user1_id.eq.${user.id},user2_id.eq.${target.id}),and(user1_id.eq.${target.id},user2_id.eq.${user.id})`)
@@ -86,6 +126,12 @@ function Discover() {
 
   return (
     <div className="flex-1 flex flex-col items-center justify-between px-4 py-4 sm:py-8 bg-gradient-soft">
+      {!isVip && (
+        <div className="w-full max-w-sm mb-3 flex items-center justify-between rounded-full bg-card border border-border px-4 py-1.5 text-xs">
+          <span className="text-muted-foreground">{swipesLeft} of {FREE_DAILY_SWIPES} swipes left</span>
+          <Link to="/pricing" className="font-semibold text-primary">Go unlimited</Link>
+        </div>
+      )}
       <div className="relative w-full max-w-sm aspect-[3/4]">
         {next && <Card profile={next} className="absolute inset-0 scale-95 opacity-60" />}
         <Card
@@ -99,15 +145,17 @@ function Discover() {
       <div className="flex items-center gap-6 mt-6">
         <button
           onClick={() => swipe(false)}
+          disabled={blocked}
           aria-label="Pass"
-          className="h-16 w-16 rounded-full bg-card shadow-card border border-border flex items-center justify-center text-muted-foreground hover:text-destructive hover:scale-105 transition"
+          className="h-16 w-16 rounded-full bg-card shadow-card border border-border flex items-center justify-center text-muted-foreground hover:text-destructive hover:scale-105 transition disabled:opacity-50"
         >
           <X className="h-7 w-7" strokeWidth={2.5} />
         </button>
         <button
           onClick={() => swipe(true)}
+          disabled={blocked}
           aria-label="Like"
-          className="h-20 w-20 rounded-full bg-gradient-primary shadow-glow flex items-center justify-center text-primary-foreground hover:scale-105 transition"
+          className="h-20 w-20 rounded-full bg-gradient-primary shadow-glow flex items-center justify-center text-primary-foreground hover:scale-105 transition disabled:opacity-50"
         >
           <Heart className="h-9 w-9 fill-current" />
         </button>
@@ -117,6 +165,7 @@ function Discover() {
 }
 
 function Card({ profile, className = "" }: { profile: Profile; className?: string }) {
+  const boosted = profile.boost_until && new Date(profile.boost_until) > new Date();
   return (
     <div className={`rounded-3xl overflow-hidden bg-card shadow-card border border-border ${className}`}>
       <div className="relative h-full w-full">
@@ -127,6 +176,14 @@ function Card({ profile, className = "" }: { profile: Profile; className?: strin
             {profile.display_name.charAt(0).toUpperCase()}
           </div>
         )}
+        <div className="absolute top-3 left-3 right-3 flex items-start justify-between gap-2">
+          {boosted && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-primary text-primary-foreground px-2 py-1 text-xs font-semibold shadow-md">
+              <Rocket className="h-3 w-3" /> Boosted
+            </span>
+          )}
+          {profile.is_vip && <div className="ml-auto"><VipBadge size="sm" /></div>}
+        </div>
         <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent p-5 text-white">
           <div className="flex items-end justify-between">
             <h2 className="text-2xl font-bold">
