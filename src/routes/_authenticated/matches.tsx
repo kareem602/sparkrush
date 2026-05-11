@@ -12,7 +12,7 @@ export const Route = createFileRoute("/_authenticated/matches")({
 
 type Row = {
   matchId: string;
-  other: { id: string; display_name: string; photo_url: string | null; is_vip: boolean };
+  other: { id: string; display_name: string; photo_url: string | null; is_vip: boolean; verification_status: VerificationLevel };
 };
 
 function Matches() {
