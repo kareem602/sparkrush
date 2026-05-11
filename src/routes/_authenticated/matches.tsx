@@ -4,6 +4,7 @@ import { MessageCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { VipBadge } from "@/components/vip-badge";
+import { VerificationBadge, type VerificationLevel } from "@/components/verification-badge";
 
 export const Route = createFileRoute("/_authenticated/matches")({
   component: Matches,
