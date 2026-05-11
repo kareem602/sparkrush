@@ -192,12 +192,13 @@ function Card({ profile, className = "" }: { profile: Profile; className?: strin
         </div>
         <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent p-5 text-white">
           <div className="flex items-end justify-between">
-            <h2 className="text-2xl font-bold">
-              {profile.display_name}
-              {profile.age && <span className="font-normal text-white/85">, {profile.age}</span>}
+            <h2 className="text-2xl font-bold flex items-center gap-1.5 flex-wrap">
+              <span>{profile.display_name}</span>
+              {!profile.hide_age && profile.age && <span className="font-normal text-white/85">, {profile.age}</span>}
+              <VerificationBadge status={profile.verification_status} isVip={profile.is_vip} size="sm" />
             </h2>
           </div>
-          {profile.location && (
+          {!profile.hide_location && profile.location && (
             <p className="text-sm text-white/85 mt-1 flex items-center gap-1"><MapPin className="h-3.5 w-3.5" /> {profile.location}</p>
           )}
           {profile.bio && <p className="text-sm text-white/90 mt-2 line-clamp-3">{profile.bio}</p>}
