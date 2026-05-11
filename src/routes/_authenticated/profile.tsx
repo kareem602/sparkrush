@@ -34,7 +34,7 @@ function ProfilePage() {
     if (!user) return;
     const { data } = await supabase
       .from("profiles")
-      .select("display_name, age, bio, photo_url, boost_until")
+      .select("display_name, age, bio, photo_url, boost_until, hide_age, hide_location, verification_status, interests")
       .eq("id", user.id)
       .maybeSingle();
     setP((data as Profile) ?? null);
