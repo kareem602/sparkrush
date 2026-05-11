@@ -66,11 +66,12 @@ function AdminPage() {
   }, [user]);
 
   const load = async () => {
-    const [{ data: ps }, { data: rs }, { data: ss }, { data: pays }] = await Promise.all([
+    const [{ data: ps }, { data: rs }, { data: ss }, { data: pays }, { data: vrs }] = await Promise.all([
       supabase.from("profiles").select("id,display_name,age,photo_url,created_at").order("created_at", { ascending: false }),
       supabase.from("user_roles").select("user_id,role"),
       supabase.from("subscriptions").select("user_id,plan,status,current_period_end"),
       supabase.from("payments").select("*").order("created_at", { ascending: false }).limit(100),
+      supabase.from("verification_requests").select("id,user_id,selfie_url,created_at").eq("status", "pending").order("created_at", { ascending: true }),
     ]);
     setProfiles((ps as Profile[]) ?? []);
     const rmap: Record<string, string[]> = {};
@@ -82,6 +83,25 @@ function AdminPage() {
     (ss ?? []).forEach((s: any) => (smap[s.user_id] = s));
     setSubs(smap);
     setPayments((pays as Payment[]) ?? []);
+    const vlist = (vrs as VReq[]) ?? [];
+    setVreqs(vlist);
+    // Sign selfie URLs (private bucket)
+    const urlMap: Record<string, string> = {};
+    await Promise.all(vlist.map(async (v) => {
+      const { data } = await supabase.storage.from("verification").createSignedUrl(v.selfie_url, 3600);
+      if (data?.signedUrl) urlMap[v.id] = data.signedUrl;
+    }));
+    setSelfieUrls(urlMap);
+  };
+
+  const decideVerification = async (req: VReq, status: "approved" | "rejected") => {
+    const { error } = await supabase
+      .from("verification_requests")
+      .update({ status, reviewer_id: user!.id, reviewed_at: new Date().toISOString() })
+      .eq("id", req.id);
+    if (error) return toast.error(error.message);
+    toast.success(`Request ${status}`);
+    load();
   };
 
   useEffect(() => {
