@@ -1,17 +1,28 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Pencil, Rocket, Crown } from "lucide-react";
+import { Pencil, Rocket, Crown, ShieldCheck, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { useVip } from "@/hooks/use-vip";
 import { VipBadge } from "@/components/vip-badge";
+import { VerificationBadge, type VerificationLevel } from "@/components/verification-badge";
 
 export const Route = createFileRoute("/_authenticated/profile")({
   component: ProfilePage,
 });
 
-type Profile = { display_name: string; age: number | null; bio: string; photo_url: string | null; boost_until: string | null };
+type Profile = {
+  display_name: string;
+  age: number | null;
+  bio: string;
+  photo_url: string | null;
+  boost_until: string | null;
+  hide_age: boolean;
+  hide_location: boolean;
+  verification_status: VerificationLevel;
+  interests: string[];
+};
 
 function ProfilePage() {
   const { user } = useAuth();
