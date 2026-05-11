@@ -180,3 +180,23 @@ function ProfilePage() {
     </div>
   );
 }
+
+function PrivacyToggle({ label, enabled, onChange }: { label: string; enabled: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <button
+      type="button"
+      onClick={() => onChange(!enabled)}
+      className="w-full flex items-center justify-between gap-3 text-left"
+    >
+      <span className="text-sm flex items-center gap-2">
+        {enabled ? <EyeOff className="h-4 w-4 text-muted-foreground" /> : <Eye className="h-4 w-4 text-muted-foreground" />}
+        {label}
+      </span>
+      <span
+        className={`relative inline-flex h-6 w-11 items-center rounded-full transition ${enabled ? "bg-primary" : "bg-muted"}`}
+      >
+        <span className={`inline-block h-5 w-5 rounded-full bg-background shadow transition ${enabled ? "translate-x-5" : "translate-x-0.5"}`} />
+      </span>
+    </button>
+  );
+}
