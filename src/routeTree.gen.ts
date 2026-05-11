@@ -13,6 +13,8 @@ import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedVerifyRouteImport } from './routes/_authenticated/verify'
+import { Route as AuthenticatedSearchRouteImport } from './routes/_authenticated/search'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedMatchesRouteImport } from './routes/_authenticated/matches'
@@ -39,6 +41,16 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedVerifyRoute = AuthenticatedVerifyRouteImport.update({
+  id: '/verify',
+  path: '/verify',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedSearchRoute = AuthenticatedSearchRouteImport.update({
+  id: '/search',
+  path: '/search',
+  getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
   id: '/profile',
@@ -87,6 +99,8 @@ export interface FileRoutesByFullPath {
   '/matches': typeof AuthenticatedMatchesRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/profile': typeof AuthenticatedProfileRoute
+  '/search': typeof AuthenticatedSearchRoute
+  '/verify': typeof AuthenticatedVerifyRoute
   '/chat/$matchId': typeof AuthenticatedChatMatchIdRoute
 }
 export interface FileRoutesByTo {
@@ -99,6 +113,8 @@ export interface FileRoutesByTo {
   '/matches': typeof AuthenticatedMatchesRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/profile': typeof AuthenticatedProfileRoute
+  '/search': typeof AuthenticatedSearchRoute
+  '/verify': typeof AuthenticatedVerifyRoute
   '/chat/$matchId': typeof AuthenticatedChatMatchIdRoute
 }
 export interface FileRoutesById {
@@ -113,6 +129,8 @@ export interface FileRoutesById {
   '/_authenticated/matches': typeof AuthenticatedMatchesRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
+  '/_authenticated/search': typeof AuthenticatedSearchRoute
+  '/_authenticated/verify': typeof AuthenticatedVerifyRoute
   '/_authenticated/chat/$matchId': typeof AuthenticatedChatMatchIdRoute
 }
 export interface FileRouteTypes {
@@ -127,6 +145,8 @@ export interface FileRouteTypes {
     | '/matches'
     | '/onboarding'
     | '/profile'
+    | '/search'
+    | '/verify'
     | '/chat/$matchId'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -139,6 +159,8 @@ export interface FileRouteTypes {
     | '/matches'
     | '/onboarding'
     | '/profile'
+    | '/search'
+    | '/verify'
     | '/chat/$matchId'
   id:
     | '__root__'
@@ -152,6 +174,8 @@ export interface FileRouteTypes {
     | '/_authenticated/matches'
     | '/_authenticated/onboarding'
     | '/_authenticated/profile'
+    | '/_authenticated/search'
+    | '/_authenticated/verify'
     | '/_authenticated/chat/$matchId'
   fileRoutesById: FileRoutesById
 }
@@ -191,6 +215,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/verify': {
+      id: '/_authenticated/verify'
+      path: '/verify'
+      fullPath: '/verify'
+      preLoaderRoute: typeof AuthenticatedVerifyRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/search': {
+      id: '/_authenticated/search'
+      path: '/search'
+      fullPath: '/search'
+      preLoaderRoute: typeof AuthenticatedSearchRouteImport
+      parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/profile': {
       id: '/_authenticated/profile'
@@ -251,6 +289,8 @@ interface AuthenticatedRouteChildren {
   AuthenticatedMatchesRoute: typeof AuthenticatedMatchesRoute
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
+  AuthenticatedSearchRoute: typeof AuthenticatedSearchRoute
+  AuthenticatedVerifyRoute: typeof AuthenticatedVerifyRoute
   AuthenticatedChatMatchIdRoute: typeof AuthenticatedChatMatchIdRoute
 }
 
@@ -261,6 +301,8 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedMatchesRoute: AuthenticatedMatchesRoute,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
+  AuthenticatedSearchRoute: AuthenticatedSearchRoute,
+  AuthenticatedVerifyRoute: AuthenticatedVerifyRoute,
   AuthenticatedChatMatchIdRoute: AuthenticatedChatMatchIdRoute,
 }
 
@@ -277,3 +319,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
