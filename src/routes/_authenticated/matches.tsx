@@ -85,7 +85,8 @@ function Matches() {
                 <Avatar name={r.other.display_name} url={r.other.photo_url} />
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold flex items-center gap-1.5 truncate">
-                    {r.other.display_name}
+                    <span className="truncate">{r.other.display_name}</span>
+                    <VerificationBadge status={r.other.verification_status} isVip={r.other.is_vip} size="sm" />
                     {r.other.is_vip && <VipBadge size="sm" />}
                   </p>
                   <p className="text-xs text-muted-foreground">Tap to chat</p>
