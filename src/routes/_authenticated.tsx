@@ -47,14 +47,19 @@ function AuthGate() {
     <div className="min-h-screen bg-background flex flex-col">
       {!isOnboarding && !isChat && (
         <header className="sticky top-0 z-20 bg-background/85 backdrop-blur border-b border-border">
-          <div className="mx-auto max-w-2xl px-4 h-14 flex items-center justify-between">
+          <div className="mx-auto max-w-2xl px-4 h-14 flex items-center justify-between gap-2">
             <Link to="/discover" className="flex items-center gap-1.5 text-primary">
               <Heart className="h-5 w-5 fill-current" />
               <span className="font-bold">Spark</span>
             </Link>
-            <button onClick={() => signOut().then(() => navigate({ to: "/" }))} className="text-muted-foreground hover:text-foreground p-2" aria-label="Sign out">
-              <LogOut className="h-5 w-5" />
-            </button>
+            <div className="flex items-center gap-1">
+              <Link to="/search" className="text-muted-foreground hover:text-foreground p-2" aria-label="Search">
+                <Search className="h-5 w-5" />
+              </Link>
+              <button onClick={() => signOut().then(() => navigate({ to: "/" }))} className="text-muted-foreground hover:text-foreground p-2" aria-label="Sign out">
+                <LogOut className="h-5 w-5" />
+              </button>
+            </div>
           </div>
         </header>
       )}
