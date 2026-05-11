@@ -33,10 +33,11 @@ export function VerificationBadge({
   }
 
   return (
-    <BadgeCheck
-      title="Verified"
-      className={`text-sky-500 fill-sky-500/15 ${dim} ${className}`}
-      strokeWidth={2.5}
-    />
+    <span title="Verified" className={`inline-flex ${className}`}>
+      <BadgeCheck
+        className={`text-sky-500 fill-sky-500/15 ${dim}`}
+        strokeWidth={2.5}
+      />
+    </span>
   );
 }
