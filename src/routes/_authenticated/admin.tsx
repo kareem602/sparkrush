@@ -204,10 +204,44 @@ function AdminPage() {
       </div>
 
       <Tabs defaultValue="users">
-        <TabsList className="w-full grid grid-cols-2">
+        <TabsList className="w-full grid grid-cols-3">
           <TabsTrigger value="users">Users</TabsTrigger>
+          <TabsTrigger value="verification">
+            Verify {vreqs.length > 0 && <span className="ml-1 inline-flex items-center justify-center h-5 min-w-5 rounded-full bg-primary text-primary-foreground text-xs px-1">{vreqs.length}</span>}
+          </TabsTrigger>
           <TabsTrigger value="payments">Payments</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="verification" className="space-y-2">
+          {vreqs.length === 0 && <p className="text-center text-muted-foreground py-8">No pending verification requests.</p>}
+          {vreqs.map((v) => {
+            const profile = profileById(v.user_id);
+            return (
+              <Card key={v.id} className="p-3 flex items-center gap-3">
+                {selfieUrls[v.id] ? (
+                  <img src={selfieUrls[v.id]} alt="Selfie" className="h-16 w-16 rounded-xl object-cover" />
+                ) : (
+                  <div className="h-16 w-16 rounded-xl bg-muted" />
+                )}
+                <div className="flex-1 min-w-0">
+                  <div className="font-medium truncate">{profile?.display_name ?? v.user_id.slice(0, 8)}</div>
+                  <div className="text-xs text-muted-foreground">Submitted {new Date(v.created_at).toLocaleString()}</div>
+                  {profile?.photo_url && (
+                    <a href={profile.photo_url} target="_blank" rel="noreferrer" className="text-xs text-primary underline">View profile photo</a>
+                  )}
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <Button size="sm" onClick={() => decideVerification(v, "approved")}>
+                    <BadgeCheck className="h-3.5 w-3.5 mr-1" /> Approve
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => decideVerification(v, "rejected")}>
+                    <XCircle className="h-3.5 w-3.5 mr-1" /> Reject
+                  </Button>
+                </div>
+              </Card>
+            );
+          })}
+        </TabsContent>
 
         <TabsContent value="users" className="space-y-2">
           {profiles.map((p) => {
