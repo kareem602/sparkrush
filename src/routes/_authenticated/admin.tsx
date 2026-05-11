@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Crown, Shield, ShieldOff, CheckCircle2, XCircle, RefreshCw } from "lucide-react";
+import { Crown, Shield, ShieldOff, CheckCircle2, XCircle, RefreshCw, BadgeCheck } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/admin")({
@@ -37,6 +37,7 @@ type Payment = {
   description: string | null;
   created_at: string;
 };
+type VReq = { id: string; user_id: string; selfie_url: string; created_at: string };
 
 function AdminPage() {
   const { user } = useAuth();
@@ -47,6 +48,8 @@ function AdminPage() {
   const [roles, setRoles] = useState<Record<string, string[]>>({});
   const [subs, setSubs] = useState<Record<string, Sub>>({});
   const [payments, setPayments] = useState<Payment[]>([]);
+  const [vreqs, setVreqs] = useState<VReq[]>([]);
+  const [selfieUrls, setSelfieUrls] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (!user) return;
@@ -63,11 +66,12 @@ function AdminPage() {
   }, [user]);
 
   const load = async () => {
-    const [{ data: ps }, { data: rs }, { data: ss }, { data: pays }] = await Promise.all([
+    const [{ data: ps }, { data: rs }, { data: ss }, { data: pays }, { data: vrs }] = await Promise.all([
       supabase.from("profiles").select("id,display_name,age,photo_url,created_at").order("created_at", { ascending: false }),
       supabase.from("user_roles").select("user_id,role"),
       supabase.from("subscriptions").select("user_id,plan,status,current_period_end"),
       supabase.from("payments").select("*").order("created_at", { ascending: false }).limit(100),
+      supabase.from("verification_requests").select("id,user_id,selfie_url,created_at").eq("status", "pending").order("created_at", { ascending: true }),
     ]);
     setProfiles((ps as Profile[]) ?? []);
     const rmap: Record<string, string[]> = {};
@@ -79,6 +83,25 @@ function AdminPage() {
     (ss ?? []).forEach((s: any) => (smap[s.user_id] = s));
     setSubs(smap);
     setPayments((pays as Payment[]) ?? []);
+    const vlist = (vrs as VReq[]) ?? [];
+    setVreqs(vlist);
+    // Sign selfie URLs (private bucket)
+    const urlMap: Record<string, string> = {};
+    await Promise.all(vlist.map(async (v) => {
+      const { data } = await supabase.storage.from("verification").createSignedUrl(v.selfie_url, 3600);
+      if (data?.signedUrl) urlMap[v.id] = data.signedUrl;
+    }));
+    setSelfieUrls(urlMap);
+  };
+
+  const decideVerification = async (req: VReq, status: "approved" | "rejected") => {
+    const { error } = await supabase
+      .from("verification_requests")
+      .update({ status, reviewer_id: user!.id, reviewed_at: new Date().toISOString() })
+      .eq("id", req.id);
+    if (error) return toast.error(error.message);
+    toast.success(`Request ${status}`);
+    load();
   };
 
   useEffect(() => {
@@ -181,10 +204,44 @@ function AdminPage() {
       </div>
 
       <Tabs defaultValue="users">
-        <TabsList className="w-full grid grid-cols-2">
+        <TabsList className="w-full grid grid-cols-3">
           <TabsTrigger value="users">Users</TabsTrigger>
+          <TabsTrigger value="verification">
+            Verify {vreqs.length > 0 && <span className="ml-1 inline-flex items-center justify-center h-5 min-w-5 rounded-full bg-primary text-primary-foreground text-xs px-1">{vreqs.length}</span>}
+          </TabsTrigger>
           <TabsTrigger value="payments">Payments</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="verification" className="space-y-2">
+          {vreqs.length === 0 && <p className="text-center text-muted-foreground py-8">No pending verification requests.</p>}
+          {vreqs.map((v) => {
+            const profile = profileById(v.user_id);
+            return (
+              <Card key={v.id} className="p-3 flex items-center gap-3">
+                {selfieUrls[v.id] ? (
+                  <img src={selfieUrls[v.id]} alt="Selfie" className="h-16 w-16 rounded-xl object-cover" />
+                ) : (
+                  <div className="h-16 w-16 rounded-xl bg-muted" />
+                )}
+                <div className="flex-1 min-w-0">
+                  <div className="font-medium truncate">{profile?.display_name ?? v.user_id.slice(0, 8)}</div>
+                  <div className="text-xs text-muted-foreground">Submitted {new Date(v.created_at).toLocaleString()}</div>
+                  {profile?.photo_url && (
+                    <a href={profile.photo_url} target="_blank" rel="noreferrer" className="text-xs text-primary underline">View profile photo</a>
+                  )}
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <Button size="sm" onClick={() => decideVerification(v, "approved")}>
+                    <BadgeCheck className="h-3.5 w-3.5 mr-1" /> Approve
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => decideVerification(v, "rejected")}>
+                    <XCircle className="h-3.5 w-3.5 mr-1" /> Reject
+                  </Button>
+                </div>
+              </Card>
+            );
+          })}
+        </TabsContent>
 
         <TabsContent value="users" className="space-y-2">
           {profiles.map((p) => {

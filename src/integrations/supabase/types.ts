@@ -117,12 +117,18 @@ export type Database = {
           created_at: string
           display_name: string
           gender: Database["public"]["Enums"]["gender"] | null
+          hide_age: boolean
+          hide_location: boolean
           id: string
           interested_in: Database["public"]["Enums"]["gender"] | null
+          interests: string[]
           location: string | null
+          message_policy: Database["public"]["Enums"]["message_policy"]
           onboarded: boolean
           photo_url: string | null
           updated_at: string
+          verification_selfie_url: string | null
+          verification_status: Database["public"]["Enums"]["verification_status"]
         }
         Insert: {
           age?: number | null
@@ -131,12 +137,18 @@ export type Database = {
           created_at?: string
           display_name?: string
           gender?: Database["public"]["Enums"]["gender"] | null
+          hide_age?: boolean
+          hide_location?: boolean
           id: string
           interested_in?: Database["public"]["Enums"]["gender"] | null
+          interests?: string[]
           location?: string | null
+          message_policy?: Database["public"]["Enums"]["message_policy"]
           onboarded?: boolean
           photo_url?: string | null
           updated_at?: string
+          verification_selfie_url?: string | null
+          verification_status?: Database["public"]["Enums"]["verification_status"]
         }
         Update: {
           age?: number | null
@@ -145,12 +157,18 @@ export type Database = {
           created_at?: string
           display_name?: string
           gender?: Database["public"]["Enums"]["gender"] | null
+          hide_age?: boolean
+          hide_location?: boolean
           id?: string
           interested_in?: Database["public"]["Enums"]["gender"] | null
+          interests?: string[]
           location?: string | null
+          message_policy?: Database["public"]["Enums"]["message_policy"]
           onboarded?: boolean
           photo_url?: string | null
           updated_at?: string
+          verification_selfie_url?: string | null
+          verification_status?: Database["public"]["Enums"]["verification_status"]
         }
         Relationships: []
       }
@@ -232,6 +250,42 @@ export type Database = {
         }
         Relationships: []
       }
+      verification_requests: {
+        Row: {
+          created_at: string
+          id: string
+          notes: string | null
+          reviewed_at: string | null
+          reviewer_id: string | null
+          selfie_url: string
+          status: Database["public"]["Enums"]["verification_request_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          reviewed_at?: string | null
+          reviewer_id?: string | null
+          selfie_url: string
+          status?: Database["public"]["Enums"]["verification_request_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          reviewed_at?: string | null
+          reviewer_id?: string | null
+          selfie_url?: string
+          status?: Database["public"]["Enums"]["verification_request_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -249,9 +303,12 @@ export type Database = {
     Enums: {
       app_role: "admin" | "moderator" | "user"
       gender: "male" | "female" | "nonbinary" | "other"
+      message_policy: "everyone" | "matches"
       payment_status: "pending" | "succeeded" | "failed" | "refunded"
       subscription_plan: "free" | "vip_monthly" | "vip_yearly"
       subscription_status: "active" | "cancelled" | "expired" | "pending"
+      verification_request_status: "pending" | "approved" | "rejected"
+      verification_status: "unverified" | "pending" | "verified" | "premium"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -381,9 +438,12 @@ export const Constants = {
     Enums: {
       app_role: ["admin", "moderator", "user"],
       gender: ["male", "female", "nonbinary", "other"],
+      message_policy: ["everyone", "matches"],
       payment_status: ["pending", "succeeded", "failed", "refunded"],
       subscription_plan: ["free", "vip_monthly", "vip_yearly"],
       subscription_status: ["active", "cancelled", "expired", "pending"],
+      verification_request_status: ["pending", "approved", "rejected"],
+      verification_status: ["unverified", "pending", "verified", "premium"],
     },
   },
 } as const

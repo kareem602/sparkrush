@@ -1,17 +1,28 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Pencil, Rocket, Crown } from "lucide-react";
+import { Pencil, Rocket, Crown, ShieldCheck, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { useVip } from "@/hooks/use-vip";
 import { VipBadge } from "@/components/vip-badge";
+import { VerificationBadge, type VerificationLevel } from "@/components/verification-badge";
 
 export const Route = createFileRoute("/_authenticated/profile")({
   component: ProfilePage,
 });
 
-type Profile = { display_name: string; age: number | null; bio: string; photo_url: string | null; boost_until: string | null };
+type Profile = {
+  display_name: string;
+  age: number | null;
+  bio: string;
+  photo_url: string | null;
+  boost_until: string | null;
+  hide_age: boolean;
+  hide_location: boolean;
+  verification_status: VerificationLevel;
+  interests: string[];
+};
 
 function ProfilePage() {
   const { user } = useAuth();
@@ -23,7 +34,7 @@ function ProfilePage() {
     if (!user) return;
     const { data } = await supabase
       .from("profiles")
-      .select("display_name, age, bio, photo_url, boost_until")
+      .select("display_name, age, bio, photo_url, boost_until, hide_age, hide_location, verification_status, interests")
       .eq("id", user.id)
       .maybeSingle();
     setP((data as Profile) ?? null);
@@ -62,18 +73,79 @@ function ProfilePage() {
         </div>
         <div className="p-6">
           <div className="flex items-start justify-between">
-            <div>
-              <h1 className="text-2xl font-bold flex items-center gap-2">
-                {p.display_name}{p.age && <span className="font-normal text-muted-foreground">, {p.age}</span>}
+            <div className="min-w-0">
+              <h1 className="text-2xl font-bold flex items-center gap-2 flex-wrap">
+                <span>{p.display_name}</span>
+                {!p.hide_age && p.age && <span className="font-normal text-muted-foreground">, {p.age}</span>}
+                <VerificationBadge status={p.verification_status} isVip={isVip} size="sm" />
               </h1>
               <p className="text-sm text-muted-foreground mt-0.5">{user?.email}</p>
             </div>
-            <Link to="/onboarding" className="inline-flex items-center gap-1 rounded-full bg-secondary px-4 py-2 text-sm font-semibold hover:bg-accent transition">
+            <Link to="/onboarding" className="inline-flex items-center gap-1 rounded-full bg-secondary px-4 py-2 text-sm font-semibold hover:bg-accent transition shrink-0">
               <Pencil className="h-3.5 w-3.5" /> Edit
             </Link>
           </div>
           {p.bio && <p className="mt-4 text-sm text-foreground/90 whitespace-pre-line">{p.bio}</p>}
+          {p.interests && p.interests.length > 0 && (
+            <div className="mt-4 flex flex-wrap gap-1.5">
+              {p.interests.map((i) => (
+                <span key={i} className="rounded-full bg-secondary px-2.5 py-1 text-xs font-medium">{i}</span>
+              ))}
+            </div>
+          )}
         </div>
+      </div>
+
+      {/* Verification card */}
+      {p.verification_status === "verified" ? (
+        <div className="bg-card rounded-2xl border border-border p-4 flex items-center gap-3">
+          <VerificationBadge status="verified" isVip={isVip} />
+          <div className="min-w-0 flex-1">
+            <p className="font-semibold">{isVip ? "Premium Verified" : "Verified"}</p>
+            <p className="text-xs text-muted-foreground">{isVip ? "Top trust tier — verified + VIP." : "Identity confirmed. Become VIP to unlock the ⭐ Premium tier."}</p>
+          </div>
+        </div>
+      ) : p.verification_status === "pending" ? (
+        <div className="bg-card rounded-2xl border border-amber-500/30 bg-amber-500/5 p-4 flex items-center gap-3">
+          <ShieldCheck className="h-6 w-6 text-amber-500" />
+          <div className="min-w-0 flex-1">
+            <p className="font-semibold">Verification pending</p>
+            <p className="text-xs text-muted-foreground">We're reviewing your selfie. You'll get a badge soon.</p>
+          </div>
+        </div>
+      ) : (
+        <Link to="/verify" className="block bg-gradient-to-r from-sky-500 to-blue-500 text-white rounded-2xl p-4 shadow-card">
+          <div className="flex items-center gap-3">
+            <ShieldCheck className="h-6 w-6" />
+            <div className="flex-1">
+              <p className="font-bold">Get verified</p>
+              <p className="text-xs opacity-90">Earn a blue badge — rank higher and get more matches.</p>
+            </div>
+          </div>
+        </Link>
+      )}
+
+      {/* Privacy toggles */}
+      <div className="bg-card rounded-2xl border border-border p-4 space-y-3">
+        <p className="font-semibold">Privacy</p>
+        <PrivacyToggle
+          label="Hide my age"
+          enabled={p.hide_age}
+          onChange={async (v) => {
+            const { error } = await supabase.from("profiles").update({ hide_age: v }).eq("id", user!.id);
+            if (error) return toast.error(error.message);
+            setP((prev) => prev ? { ...prev, hide_age: v } : prev);
+          }}
+        />
+        <PrivacyToggle
+          label="Hide my location"
+          enabled={p.hide_location}
+          onChange={async (v) => {
+            const { error } = await supabase.from("profiles").update({ hide_location: v }).eq("id", user!.id);
+            if (error) return toast.error(error.message);
+            setP((prev) => prev ? { ...prev, hide_location: v } : prev);
+          }}
+        />
       </div>
 
       {isVip ? (
@@ -106,5 +178,25 @@ function ProfilePage() {
         </Link>
       )}
     </div>
+  );
+}
+
+function PrivacyToggle({ label, enabled, onChange }: { label: string; enabled: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <button
+      type="button"
+      onClick={() => onChange(!enabled)}
+      className="w-full flex items-center justify-between gap-3 text-left"
+    >
+      <span className="text-sm flex items-center gap-2">
+        {enabled ? <EyeOff className="h-4 w-4 text-muted-foreground" /> : <Eye className="h-4 w-4 text-muted-foreground" />}
+        {label}
+      </span>
+      <span
+        className={`relative inline-flex h-6 w-11 items-center rounded-full transition ${enabled ? "bg-primary" : "bg-muted"}`}
+      >
+        <span className={`inline-block h-5 w-5 rounded-full bg-background shadow transition ${enabled ? "translate-x-5" : "translate-x-0.5"}`} />
+      </span>
+    </button>
   );
 }

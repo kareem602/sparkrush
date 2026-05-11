@@ -4,6 +4,7 @@ import { MessageCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { VipBadge } from "@/components/vip-badge";
+import { VerificationBadge, type VerificationLevel } from "@/components/verification-badge";
 
 export const Route = createFileRoute("/_authenticated/matches")({
   component: Matches,
@@ -11,7 +12,7 @@ export const Route = createFileRoute("/_authenticated/matches")({
 
 type Row = {
   matchId: string;
-  other: { id: string; display_name: string; photo_url: string | null; is_vip: boolean };
+  other: { id: string; display_name: string; photo_url: string | null; is_vip: boolean; verification_status: VerificationLevel };
 };
 
 function Matches() {
@@ -31,7 +32,7 @@ function Matches() {
       const otherIds = (matches ?? []).map((m) => (m.user1_id === user.id ? m.user2_id : m.user1_id));
       if (otherIds.length === 0) { setRows([]); setLoading(false); return; }
       const { data: profiles } = await supabase
-        .from("profiles").select("id, display_name, photo_url").in("id", otherIds);
+        .from("profiles").select("id, display_name, photo_url, verification_status").in("id", otherIds);
       const { data: subs } = await supabase
         .from("subscriptions").select("user_id, status, plan, current_period_end").in("user_id", otherIds);
       const vipIds = new Set(
@@ -50,6 +51,7 @@ function Matches() {
             display_name: p?.display_name ?? "Someone",
             photo_url: p?.photo_url ?? null,
             is_vip: vipIds.has(otherId),
+            verification_status: (p?.verification_status as VerificationLevel) ?? "unverified",
           },
         };
       }));
@@ -83,7 +85,8 @@ function Matches() {
                 <Avatar name={r.other.display_name} url={r.other.photo_url} />
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold flex items-center gap-1.5 truncate">
-                    {r.other.display_name}
+                    <span className="truncate">{r.other.display_name}</span>
+                    <VerificationBadge status={r.other.verification_status} isVip={r.other.is_vip} size="sm" />
                     {r.other.is_vip && <VipBadge size="sm" />}
                   </p>
                   <p className="text-xs text-muted-foreground">Tap to chat</p>

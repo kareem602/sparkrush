@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { useVip } from "@/hooks/use-vip";
 import { VipBadge } from "@/components/vip-badge";
+import { VerificationBadge, type VerificationLevel } from "@/components/verification-badge";
 
 export const Route = createFileRoute("/_authenticated/discover")({
   component: Discover,
@@ -19,6 +20,9 @@ type Profile = {
   photo_url: string | null;
   location: string | null;
   boost_until: string | null;
+  hide_age: boolean;
+  hide_location: boolean;
+  verification_status: VerificationLevel;
   is_vip?: boolean;
 };
 
@@ -41,14 +45,14 @@ function Discover() {
 
     const { data, error } = await supabase
       .from("profiles")
-      .select("id, display_name, age, bio, photo_url, location, boost_until")
+      .select("id, display_name, age, bio, photo_url, location, boost_until, hide_age, hide_location, verification_status")
       .eq("onboarded", true)
       .not("id", "in", `(${excludeIds.join(",")})`)
       .limit(30);
     if (error) toast.error(error.message);
     const profs = (data ?? []) as Profile[];
 
-    // Annotate VIP and sort: boosted first, then VIP, then random
+    // Annotate VIP and sort: boosted → verified → VIP → others
     const ids = profs.map((p) => p.id);
     let vipIds = new Set<string>();
     if (ids.length > 0) {
@@ -63,10 +67,12 @@ function Discover() {
     const now = Date.now();
     const annotated = profs.map((p) => ({ ...p, is_vip: vipIds.has(p.id) }));
     annotated.sort((a, b) => {
-      const aBoost = a.boost_until && new Date(a.boost_until).getTime() > now ? 2 : 0;
-      const bBoost = b.boost_until && new Date(b.boost_until).getTime() > now ? 2 : 0;
-      const aScore = aBoost + (a.is_vip ? 1 : 0);
-      const bScore = bBoost + (b.is_vip ? 1 : 0);
+      const aBoost = a.boost_until && new Date(a.boost_until).getTime() > now ? 4 : 0;
+      const bBoost = b.boost_until && new Date(b.boost_until).getTime() > now ? 4 : 0;
+      const aVer = a.verification_status === "verified" ? 2 : 0;
+      const bVer = b.verification_status === "verified" ? 2 : 0;
+      const aScore = aBoost + aVer + (a.is_vip ? 1 : 0);
+      const bScore = bBoost + bVer + (b.is_vip ? 1 : 0);
       return bScore - aScore;
     });
     setStack(annotated);
@@ -186,12 +192,13 @@ function Card({ profile, className = "" }: { profile: Profile; className?: strin
         </div>
         <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent p-5 text-white">
           <div className="flex items-end justify-between">
-            <h2 className="text-2xl font-bold">
-              {profile.display_name}
-              {profile.age && <span className="font-normal text-white/85">, {profile.age}</span>}
+            <h2 className="text-2xl font-bold flex items-center gap-1.5 flex-wrap">
+              <span>{profile.display_name}</span>
+              {!profile.hide_age && profile.age && <span className="font-normal text-white/85">, {profile.age}</span>}
+              <VerificationBadge status={profile.verification_status} isVip={profile.is_vip} size="sm" />
             </h2>
           </div>
-          {profile.location && (
+          {!profile.hide_location && profile.location && (
             <p className="text-sm text-white/85 mt-1 flex items-center gap-1"><MapPin className="h-3.5 w-3.5" /> {profile.location}</p>
           )}
           {profile.bio && <p className="text-sm text-white/90 mt-2 line-clamp-3">{profile.bio}</p>}
