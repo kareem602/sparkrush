@@ -32,7 +32,7 @@ function Matches() {
       const otherIds = (matches ?? []).map((m) => (m.user1_id === user.id ? m.user2_id : m.user1_id));
       if (otherIds.length === 0) { setRows([]); setLoading(false); return; }
       const { data: profiles } = await supabase
-        .from("profiles").select("id, display_name, photo_url").in("id", otherIds);
+        .from("profiles").select("id, display_name, photo_url, verification_status").in("id", otherIds);
       const { data: subs } = await supabase
         .from("subscriptions").select("user_id, status, plan, current_period_end").in("user_id", otherIds);
       const vipIds = new Set(
@@ -51,6 +51,7 @@ function Matches() {
             display_name: p?.display_name ?? "Someone",
             photo_url: p?.photo_url ?? null,
             is_vip: vipIds.has(otherId),
+            verification_status: (p?.verification_status as VerificationLevel) ?? "unverified",
           },
         };
       }));
