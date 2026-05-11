@@ -139,6 +139,45 @@ function Onboarding() {
             <Label htmlFor="bio">Bio</Label>
             <Textarea id="bio" value={bio} onChange={(e) => setBio(e.target.value)} maxLength={300} rows={3} placeholder="A line or two about you…" />
           </div>
+          <div className="space-y-1.5">
+            <Label>Interests</Label>
+            <div className="flex flex-wrap gap-1.5">
+              {INTEREST_OPTIONS.map((i) => {
+                const active = interests.includes(i);
+                return (
+                  <button
+                    type="button"
+                    key={i}
+                    onClick={() => toggleInterest(i)}
+                    className={`rounded-full px-3 py-1.5 text-xs font-medium border transition ${active ? "bg-primary text-primary-foreground border-primary" : "bg-secondary border-border hover:bg-accent"}`}
+                  >
+                    {i}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            <Label>Privacy</Label>
+            <label className="flex items-center justify-between text-sm py-1.5">
+              <span>Hide my age</span>
+              <input type="checkbox" checked={hideAge} onChange={(e) => setHideAge(e.target.checked)} className="h-4 w-4 accent-primary" />
+            </label>
+            <label className="flex items-center justify-between text-sm py-1.5">
+              <span>Hide my location</span>
+              <input type="checkbox" checked={hideLocation} onChange={(e) => setHideLocation(e.target.checked)} className="h-4 w-4 accent-primary" />
+            </label>
+            <div className="space-y-1.5 pt-1">
+              <Label className="text-xs text-muted-foreground">Who can message me</Label>
+              <Select value={messagePolicy} onValueChange={(v) => setMessagePolicy(v as "everyone" | "matches")}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="matches">Matches only</SelectItem>
+                  <SelectItem value="everyone">Everyone</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
           <Button type="submit" disabled={busy} className="w-full h-11 rounded-full bg-gradient-primary text-primary-foreground font-semibold border-0">
             {busy ? "Saving…" : "Save & start matching"}
           </Button>
