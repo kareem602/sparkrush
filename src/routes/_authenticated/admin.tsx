@@ -37,6 +37,7 @@ type Payment = {
   description: string | null;
   created_at: string;
 };
+type VReq = { id: string; user_id: string; selfie_url: string; created_at: string };
 
 function AdminPage() {
   const { user } = useAuth();
@@ -47,6 +48,8 @@ function AdminPage() {
   const [roles, setRoles] = useState<Record<string, string[]>>({});
   const [subs, setSubs] = useState<Record<string, Sub>>({});
   const [payments, setPayments] = useState<Payment[]>([]);
+  const [vreqs, setVreqs] = useState<VReq[]>([]);
+  const [selfieUrls, setSelfieUrls] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (!user) return;
