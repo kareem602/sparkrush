@@ -45,14 +45,14 @@ function Discover() {
 
     const { data, error } = await supabase
       .from("profiles")
-      .select("id, display_name, age, bio, photo_url, location, boost_until")
+      .select("id, display_name, age, bio, photo_url, location, boost_until, hide_age, hide_location, verification_status")
       .eq("onboarded", true)
       .not("id", "in", `(${excludeIds.join(",")})`)
       .limit(30);
     if (error) toast.error(error.message);
     const profs = (data ?? []) as Profile[];
 
-    // Annotate VIP and sort: boosted first, then VIP, then random
+    // Annotate VIP and sort: boosted → verified → VIP → others
     const ids = profs.map((p) => p.id);
     let vipIds = new Set<string>();
     if (ids.length > 0) {
@@ -67,10 +67,12 @@ function Discover() {
     const now = Date.now();
     const annotated = profs.map((p) => ({ ...p, is_vip: vipIds.has(p.id) }));
     annotated.sort((a, b) => {
-      const aBoost = a.boost_until && new Date(a.boost_until).getTime() > now ? 2 : 0;
-      const bBoost = b.boost_until && new Date(b.boost_until).getTime() > now ? 2 : 0;
-      const aScore = aBoost + (a.is_vip ? 1 : 0);
-      const bScore = bBoost + (b.is_vip ? 1 : 0);
+      const aBoost = a.boost_until && new Date(a.boost_until).getTime() > now ? 4 : 0;
+      const bBoost = b.boost_until && new Date(b.boost_until).getTime() > now ? 4 : 0;
+      const aVer = a.verification_status === "verified" ? 2 : 0;
+      const bVer = b.verification_status === "verified" ? 2 : 0;
+      const aScore = aBoost + aVer + (a.is_vip ? 1 : 0);
+      const bScore = bBoost + bVer + (b.is_vip ? 1 : 0);
       return bScore - aScore;
     });
     setStack(annotated);
