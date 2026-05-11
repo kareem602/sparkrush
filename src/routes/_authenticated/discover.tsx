@@ -20,6 +20,9 @@ type Profile = {
   photo_url: string | null;
   location: string | null;
   boost_until: string | null;
+  hide_age: boolean;
+  hide_location: boolean;
+  verification_status: VerificationLevel;
   is_vip?: boolean;
 };
 
