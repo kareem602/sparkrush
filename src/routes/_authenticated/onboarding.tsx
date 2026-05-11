@@ -16,6 +16,12 @@ export const Route = createFileRoute("/_authenticated/onboarding")({
 
 type Gender = "male" | "female" | "nonbinary" | "other";
 
+const INTEREST_OPTIONS = [
+  "Travel", "Music", "Movies", "Fitness", "Foodie", "Coffee", "Hiking",
+  "Gaming", "Art", "Photography", "Reading", "Yoga", "Dancing", "Tech",
+  "Pets", "Fashion", "Cooking", "Nightlife",
+];
+
 function Onboarding() {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -25,6 +31,10 @@ function Onboarding() {
   const [interestedIn, setInterestedIn] = useState<Gender>("male");
   const [bio, setBio] = useState("");
   const [photoUrl, setPhotoUrl] = useState("");
+  const [interests, setInterests] = useState<string[]>([]);
+  const [hideAge, setHideAge] = useState(false);
+  const [hideLocation, setHideLocation] = useState(false);
+  const [messagePolicy, setMessagePolicy] = useState<"everyone" | "matches">("matches");
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -37,9 +47,17 @@ function Onboarding() {
         if (data.interested_in) setInterestedIn(data.interested_in);
         setBio(data.bio || "");
         setPhotoUrl(data.photo_url || "");
+        setInterests(data.interests ?? []);
+        setHideAge(!!data.hide_age);
+        setHideLocation(!!data.hide_location);
+        if (data.message_policy) setMessagePolicy(data.message_policy);
       }
     });
   }, [user]);
+
+  const toggleInterest = (i: string) => {
+    setInterests((prev) => prev.includes(i) ? prev.filter((x) => x !== i) : [...prev, i]);
+  };
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,6 +73,10 @@ function Onboarding() {
       gender, interested_in: interestedIn,
       bio: bio.trim(),
       photo_url: photoUrl.trim() || null,
+      interests,
+      hide_age: hideAge,
+      hide_location: hideLocation,
+      message_policy: messagePolicy,
       onboarded: true,
     }).eq("id", user.id);
     setBusy(false);
