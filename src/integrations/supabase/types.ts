@@ -109,6 +109,91 @@ export type Database = {
         }
         Relationships: []
       }
+      post_comments: {
+        Row: {
+          author_id: string
+          body: string
+          created_at: string
+          id: string
+          post_id: string
+        }
+        Insert: {
+          author_id: string
+          body: string
+          created_at?: string
+          id?: string
+          post_id: string
+        }
+        Update: {
+          author_id?: string
+          body?: string
+          created_at?: string
+          id?: string
+          post_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_comments_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      post_likes: {
+        Row: {
+          created_at: string
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_likes_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      posts: {
+        Row: {
+          author_id: string
+          caption: string
+          created_at: string
+          id: string
+          image_url: string
+          updated_at: string
+        }
+        Insert: {
+          author_id: string
+          caption?: string
+          created_at?: string
+          id?: string
+          image_url: string
+          updated_at?: string
+        }
+        Update: {
+          author_id?: string
+          caption?: string
+          created_at?: string
+          id?: string
+          image_url?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           age: number | null
@@ -171,6 +256,62 @@ export type Database = {
           verification_status?: Database["public"]["Enums"]["verification_status"]
         }
         Relationships: []
+      }
+      stories: {
+        Row: {
+          author_id: string
+          caption: string
+          created_at: string
+          expires_at: string
+          id: string
+          media_type: Database["public"]["Enums"]["story_media_type"]
+          media_url: string
+        }
+        Insert: {
+          author_id: string
+          caption?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          media_type?: Database["public"]["Enums"]["story_media_type"]
+          media_url: string
+        }
+        Update: {
+          author_id?: string
+          caption?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          media_type?: Database["public"]["Enums"]["story_media_type"]
+          media_url?: string
+        }
+        Relationships: []
+      }
+      story_views: {
+        Row: {
+          story_id: string
+          viewed_at: string
+          viewer_id: string
+        }
+        Insert: {
+          story_id: string
+          viewed_at?: string
+          viewer_id: string
+        }
+        Update: {
+          story_id?: string
+          viewed_at?: string
+          viewer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "story_views_story_id_fkey"
+            columns: ["story_id"]
+            isOneToOne: false
+            referencedRelation: "stories"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       subscriptions: {
         Row: {
@@ -305,6 +446,7 @@ export type Database = {
       gender: "male" | "female" | "nonbinary" | "other"
       message_policy: "everyone" | "matches"
       payment_status: "pending" | "succeeded" | "failed" | "refunded"
+      story_media_type: "image" | "video"
       subscription_plan: "free" | "vip_monthly" | "vip_yearly"
       subscription_status: "active" | "cancelled" | "expired" | "pending"
       verification_request_status: "pending" | "approved" | "rejected"
@@ -440,6 +582,7 @@ export const Constants = {
       gender: ["male", "female", "nonbinary", "other"],
       message_policy: ["everyone", "matches"],
       payment_status: ["pending", "succeeded", "failed", "refunded"],
+      story_media_type: ["image", "video"],
       subscription_plan: ["free", "vip_monthly", "vip_yearly"],
       subscription_status: ["active", "cancelled", "expired", "pending"],
       verification_request_status: ["pending", "approved", "rejected"],
