@@ -1,6 +1,6 @@
 import { createFileRoute, Outlet, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Heart, Compass, MessageCircle, User as UserIcon, LogOut, Shield, Star, Search } from "lucide-react";
+import { Heart, Compass, MessageCircle, User as UserIcon, LogOut, Shield, Star, Search, Sparkles } from "lucide-react";
 import { Link, useLocation } from "@tanstack/react-router";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
