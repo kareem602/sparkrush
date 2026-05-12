@@ -1,9 +1,10 @@
 import { createFileRoute, Outlet, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Heart, Compass, MessageCircle, User as UserIcon, LogOut, Shield, Star, Search, Sparkles } from "lucide-react";
+import { Heart, Compass, MessageCircle, User as UserIcon, LogOut, Shield, Star, Search, Sparkles, Bell } from "lucide-react";
 import { Link, useLocation } from "@tanstack/react-router";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
+import { useNotifications } from "@/hooks/use-notifications";
 
 export const Route = createFileRoute("/_authenticated")({
   component: AuthGate,
@@ -15,6 +16,7 @@ function AuthGate() {
   const location = useLocation();
   const [onboarded, setOnboarded] = useState<boolean | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const { unread } = useNotifications();
 
   useEffect(() => {
     if (!loading && !user) navigate({ to: "/auth" });
@@ -55,6 +57,14 @@ function AuthGate() {
             <div className="flex items-center gap-1">
               <Link to="/search" className="text-muted-foreground hover:text-foreground p-2" aria-label="Search">
                 <Search className="h-5 w-5" />
+              </Link>
+              <Link to="/notifications" className="relative text-muted-foreground hover:text-foreground p-2" aria-label="Notifications">
+                <Bell className="h-5 w-5" />
+                {unread > 0 && (
+                  <span className="absolute top-1 right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center border-2 border-background">
+                    {unread > 99 ? "99+" : unread}
+                  </span>
+                )}
               </Link>
               <button onClick={() => signOut().then(() => navigate({ to: "/" }))} className="text-muted-foreground hover:text-foreground p-2" aria-label="Sign out">
                 <LogOut className="h-5 w-5" />

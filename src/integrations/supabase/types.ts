@@ -70,6 +70,48 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          actor_id: string | null
+          body: string
+          created_at: string
+          id: string
+          match_id: string | null
+          message_id: string | null
+          post_id: string | null
+          read: boolean
+          recipient_id: string
+          story_id: string | null
+          type: Database["public"]["Enums"]["notification_type"]
+        }
+        Insert: {
+          actor_id?: string | null
+          body?: string
+          created_at?: string
+          id?: string
+          match_id?: string | null
+          message_id?: string | null
+          post_id?: string | null
+          read?: boolean
+          recipient_id: string
+          story_id?: string | null
+          type: Database["public"]["Enums"]["notification_type"]
+        }
+        Update: {
+          actor_id?: string | null
+          body?: string
+          created_at?: string
+          id?: string
+          match_id?: string | null
+          message_id?: string | null
+          post_id?: string | null
+          read?: boolean
+          recipient_id?: string
+          story_id?: string | null
+          type?: Database["public"]["Enums"]["notification_type"]
+        }
+        Relationships: []
+      }
       payments: {
         Row: {
           amount_cents: number
@@ -432,6 +474,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      _actor_name: { Args: { _id: string }; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -445,6 +488,12 @@ export type Database = {
       app_role: "admin" | "moderator" | "user"
       gender: "male" | "female" | "nonbinary" | "other"
       message_policy: "everyone" | "matches"
+      notification_type:
+        | "message"
+        | "match"
+        | "post_like"
+        | "comment"
+        | "story_view"
       payment_status: "pending" | "succeeded" | "failed" | "refunded"
       story_media_type: "image" | "video"
       subscription_plan: "free" | "vip_monthly" | "vip_yearly"
@@ -581,6 +630,13 @@ export const Constants = {
       app_role: ["admin", "moderator", "user"],
       gender: ["male", "female", "nonbinary", "other"],
       message_policy: ["everyone", "matches"],
+      notification_type: [
+        "message",
+        "match",
+        "post_like",
+        "comment",
+        "story_view",
+      ],
       payment_status: ["pending", "succeeded", "failed", "refunded"],
       story_media_type: ["image", "video"],
       subscription_plan: ["free", "vip_monthly", "vip_yearly"],
