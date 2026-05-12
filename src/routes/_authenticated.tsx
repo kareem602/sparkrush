@@ -16,6 +16,7 @@ function AuthGate() {
   const location = useLocation();
   const [onboarded, setOnboarded] = useState<boolean | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const { unread } = useNotifications();
 
   useEffect(() => {
     if (!loading && !user) navigate({ to: "/auth" });
