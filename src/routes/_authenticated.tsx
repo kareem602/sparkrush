@@ -58,6 +58,14 @@ function AuthGate() {
               <Link to="/search" className="text-muted-foreground hover:text-foreground p-2" aria-label="Search">
                 <Search className="h-5 w-5" />
               </Link>
+              <Link to="/notifications" className="relative text-muted-foreground hover:text-foreground p-2" aria-label="Notifications">
+                <Bell className="h-5 w-5" />
+                {unread > 0 && (
+                  <span className="absolute top-1 right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center border-2 border-background">
+                    {unread > 99 ? "99+" : unread}
+                  </span>
+                )}
+              </Link>
               <button onClick={() => signOut().then(() => navigate({ to: "/" }))} className="text-muted-foreground hover:text-foreground p-2" aria-label="Sign out">
                 <LogOut className="h-5 w-5" />
               </button>
