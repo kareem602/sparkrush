@@ -86,6 +86,7 @@ export function useNotifications() {
           seenIds.current.add(n.id);
           setItems((prev) => [n, ...prev].slice(0, 50));
           playBeep();
+          toast(n.body, { duration: 4000 });
         }
       )
       .on(
