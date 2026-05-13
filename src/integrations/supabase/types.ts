@@ -39,24 +39,33 @@ export type Database = {
         Row: {
           content: string
           created_at: string
+          duration_seconds: number | null
           id: string
+          kind: Database["public"]["Enums"]["message_kind"]
           match_id: string
+          media_url: string | null
           read_at: string | null
           sender_id: string
         }
         Insert: {
-          content: string
+          content?: string
           created_at?: string
+          duration_seconds?: number | null
           id?: string
+          kind?: Database["public"]["Enums"]["message_kind"]
           match_id: string
+          media_url?: string | null
           read_at?: string | null
           sender_id: string
         }
         Update: {
           content?: string
           created_at?: string
+          duration_seconds?: number | null
           id?: string
+          kind?: Database["public"]["Enums"]["message_kind"]
           match_id?: string
+          media_url?: string | null
           read_at?: string | null
           sender_id?: string
         }
@@ -487,6 +496,7 @@ export type Database = {
     Enums: {
       app_role: "admin" | "moderator" | "user"
       gender: "male" | "female" | "nonbinary" | "other"
+      message_kind: "text" | "image" | "video" | "audio"
       message_policy: "everyone" | "matches"
       notification_type:
         | "message"
@@ -629,6 +639,7 @@ export const Constants = {
     Enums: {
       app_role: ["admin", "moderator", "user"],
       gender: ["male", "female", "nonbinary", "other"],
+      message_kind: ["text", "image", "video", "audio"],
       message_policy: ["everyone", "matches"],
       notification_type: [
         "message",
