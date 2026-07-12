@@ -27,8 +27,8 @@ function AuthGate() {
     supabase.from("profiles").select("onboarded").eq("id", user.id).maybeSingle().then(({ data }) => {
       setOnboarded(!!data?.onboarded);
     });
-    supabase.from("user_roles").select("role").eq("user_id", user.id).eq("role", "admin").maybeSingle().then(({ data }) => {
-      setIsAdmin(!!data);
+    supabase.from("user_roles").select("role").eq("user_id", user.id).in("role", ["admin", "owner"]).then(({ data }) => {
+      setIsAdmin((data ?? []).length > 0);
     });
   }, [user]);
 
