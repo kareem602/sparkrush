@@ -494,7 +494,7 @@ export type Database = {
       is_vip: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
-      app_role: "admin" | "moderator" | "user"
+      app_role: "admin" | "moderator" | "user" | "owner"
       gender: "male" | "female" | "nonbinary" | "other"
       message_kind: "text" | "image" | "video" | "audio"
       message_policy: "everyone" | "matches"
@@ -637,7 +637,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "moderator", "user"],
+      app_role: ["admin", "moderator", "user", "owner"],
       gender: ["male", "female", "nonbinary", "other"],
       message_kind: ["text", "image", "video", "audio"],
       message_policy: ["everyone", "matches"],
