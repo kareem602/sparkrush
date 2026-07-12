@@ -34,7 +34,7 @@ type Report = {
   id: string; reporter_id: string; target_type: string; target_id: string;
   reason: string; status: string; created_at: string;
 };
-type Post = { id: string; author_id: string; caption: string | null; media_url: string; featured: boolean; created_at: string };
+type Post = { id: string; author_id: string; caption: string | null; image_url: string; featured: boolean; created_at: string };
 
 function AdminPage() {
   const { user } = useAuth();
@@ -73,7 +73,7 @@ function AdminPage() {
       supabase.from("payments").select("*").order("created_at", { ascending: false }).limit(100),
       supabase.from("verification_requests").select("id,user_id,selfie_url,created_at").eq("status", "pending").order("created_at", { ascending: true }),
       supabase.from("reports").select("*").eq("status", "open").order("created_at", { ascending: false }),
-      supabase.from("posts").select("id,author_id,caption,media_url,featured,created_at").order("created_at", { ascending: false }).limit(50),
+      supabase.from("posts").select("id,author_id,caption,image_url,featured,created_at").order("created_at", { ascending: false }).limit(50),
     ]);
     setProfiles((ps as Profile[]) ?? []);
     const rmap: Record<string, string[]> = {};
@@ -321,7 +321,7 @@ function AdminPage() {
             const author = profileById(p.author_id);
             return (
               <Card key={p.id} className="p-3 flex items-center gap-3">
-                <img src={p.media_url} alt="" className="h-16 w-16 rounded-lg object-cover" />
+                <img src={p.image_url} alt="" className="h-16 w-16 rounded-lg object-cover" />
                 <div className="flex-1 min-w-0">
                   <div className="font-medium truncate">{author?.display_name ?? "Unknown"}</div>
                   <div className="text-xs text-muted-foreground truncate">{p.caption || "—"}</div>
