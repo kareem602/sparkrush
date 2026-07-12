@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      announcements: {
+        Row: {
+          author_id: string
+          body: string
+          created_at: string
+          id: string
+          title: string
+        }
+        Insert: {
+          author_id: string
+          body: string
+          created_at?: string
+          id?: string
+          title: string
+        }
+        Update: {
+          author_id?: string
+          body?: string
+          created_at?: string
+          id?: string
+          title?: string
+        }
+        Relationships: []
+      }
       matches: {
         Row: {
           created_at: string
@@ -223,6 +247,7 @@ export type Database = {
           author_id: string
           caption: string
           created_at: string
+          featured: boolean
           id: string
           image_url: string
           updated_at: string
@@ -231,6 +256,7 @@ export type Database = {
           author_id: string
           caption?: string
           created_at?: string
+          featured?: boolean
           id?: string
           image_url: string
           updated_at?: string
@@ -239,6 +265,7 @@ export type Database = {
           author_id?: string
           caption?: string
           created_at?: string
+          featured?: boolean
           id?: string
           image_url?: string
           updated_at?: string
@@ -252,16 +279,19 @@ export type Database = {
           boost_until: string | null
           created_at: string
           display_name: string
+          featured: boolean
           gender: Database["public"]["Enums"]["gender"] | null
           hide_age: boolean
           hide_location: boolean
           id: string
           interested_in: Database["public"]["Enums"]["gender"] | null
           interests: string[]
+          is_banned: boolean
           location: string | null
           message_policy: Database["public"]["Enums"]["message_policy"]
           onboarded: boolean
           photo_url: string | null
+          suspended_until: string | null
           updated_at: string
           verification_selfie_url: string | null
           verification_status: Database["public"]["Enums"]["verification_status"]
@@ -272,16 +302,19 @@ export type Database = {
           boost_until?: string | null
           created_at?: string
           display_name?: string
+          featured?: boolean
           gender?: Database["public"]["Enums"]["gender"] | null
           hide_age?: boolean
           hide_location?: boolean
           id: string
           interested_in?: Database["public"]["Enums"]["gender"] | null
           interests?: string[]
+          is_banned?: boolean
           location?: string | null
           message_policy?: Database["public"]["Enums"]["message_policy"]
           onboarded?: boolean
           photo_url?: string | null
+          suspended_until?: string | null
           updated_at?: string
           verification_selfie_url?: string | null
           verification_status?: Database["public"]["Enums"]["verification_status"]
@@ -292,19 +325,58 @@ export type Database = {
           boost_until?: string | null
           created_at?: string
           display_name?: string
+          featured?: boolean
           gender?: Database["public"]["Enums"]["gender"] | null
           hide_age?: boolean
           hide_location?: boolean
           id?: string
           interested_in?: Database["public"]["Enums"]["gender"] | null
           interests?: string[]
+          is_banned?: boolean
           location?: string | null
           message_policy?: Database["public"]["Enums"]["message_policy"]
           onboarded?: boolean
           photo_url?: string | null
+          suspended_until?: string | null
           updated_at?: string
           verification_selfie_url?: string | null
           verification_status?: Database["public"]["Enums"]["verification_status"]
+        }
+        Relationships: []
+      }
+      reports: {
+        Row: {
+          created_at: string
+          id: string
+          reason: string
+          reporter_id: string
+          resolved_at: string | null
+          resolver_id: string | null
+          status: string
+          target_id: string
+          target_type: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          reason: string
+          reporter_id: string
+          resolved_at?: string | null
+          resolver_id?: string | null
+          status?: string
+          target_id: string
+          target_type: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          reason?: string
+          reporter_id?: string
+          resolved_at?: string | null
+          resolver_id?: string | null
+          status?: string
+          target_id?: string
+          target_type?: string
         }
         Relationships: []
       }
@@ -494,7 +566,7 @@ export type Database = {
       is_vip: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
-      app_role: "admin" | "moderator" | "user"
+      app_role: "admin" | "moderator" | "user" | "owner"
       gender: "male" | "female" | "nonbinary" | "other"
       message_kind: "text" | "image" | "video" | "audio"
       message_policy: "everyone" | "matches"
@@ -637,7 +709,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "moderator", "user"],
+      app_role: ["admin", "moderator", "user", "owner"],
       gender: ["male", "female", "nonbinary", "other"],
       message_kind: ["text", "image", "video", "audio"],
       message_policy: ["everyone", "matches"],
