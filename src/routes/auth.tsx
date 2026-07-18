@@ -10,12 +10,22 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 export const Route = createFileRoute("/auth")({
+  validateSearch: (s: Record<string, unknown>) => ({
+    next: typeof s.next === "string" ? s.next : undefined,
+  }),
   component: AuthPage,
 });
+
+// Only accept same-origin relative paths as the post-auth destination.
+function safeNext(next: string | undefined): string | null {
+  if (!next || !next.startsWith("/") || next.startsWith("//")) return null;
+  return next;
+}
 
 function AuthPage() {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
+  const { next } = Route.useSearch();
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -23,17 +33,25 @@ function AuthPage() {
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    if (!loading && user) navigate({ to: "/discover" });
-  }, [user, loading, navigate]);
+    if (!loading && user) {
+      const dest = safeNext(next);
+      if (dest) window.location.replace(dest);
+      else navigate({ to: "/discover" });
+    }
+  }, [user, loading, navigate, next]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setBusy(true);
     try {
+      const dest = safeNext(next);
+      const emailRedirect = dest
+        ? `${window.location.origin}/auth?next=${encodeURIComponent(dest)}`
+        : window.location.origin;
       if (mode === "signup") {
         const { error } = await supabase.auth.signUp({
           email, password,
-          options: { data: { display_name: name }, emailRedirectTo: window.location.origin },
+          options: { data: { display_name: name }, emailRedirectTo: emailRedirect },
         });
         if (error) throw error;
         toast.success("Welcome! Let's set up your profile.");
@@ -50,7 +68,11 @@ function AuthPage() {
 
   const google = async () => {
     setBusy(true);
-    const r = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin });
+    const dest = safeNext(next);
+    const redirect_uri = dest
+      ? `${window.location.origin}/auth?next=${encodeURIComponent(dest)}`
+      : window.location.origin;
+    const r = await lovable.auth.signInWithOAuth("google", { redirect_uri });
     if (r.error) {
       toast.error("Couldn't sign in with Google");
       setBusy(false);
